@@ -1,0 +1,67 @@
+---
+- type: replace
+  path: /releases/-
+  value:
+    name: bosh-alicloud-cpi
+    version: 20
+    url: file:///root/bosh-alicloud-cpi-release-r20.tgz
+    sha1: dd268fb59ce6b4c5ead969eab0e4c37511a51177
+
+- type: replace
+  path: /resource_pools/name=vms/stemcell?
+  value:
+    url: http://bosh.oss-cn-hangzhou.aliyuncs.com/light-bosh-stemcell-1018-alicloud-kvm-ubuntu-xenial-go_agent.tgz
+    sha1: 7e004713a5eda2f3522631935ade0a08ec055936
+
+# Configure sizes
+- type: replace
+  path: /resource_pools/name=vms/cloud_properties?
+  value:
+    availability_zone: ((zone))
+    ephemeral_disk:
+      size: 25000
+      category: cloud_efficiency
+    instance_type: ecs.sn2ne.xlarge
+    key_pair_name: ((key_pair_name))
+    instance_name: "concourse"
+
+# Add disk pool
+- type: replace
+  path: /disk_pools/name=disks/cloud_properties?
+  value: {category: cloud_efficiency}
+
+# Configure networks
+- type: replace
+  path: /networks/name=default/subnets/0/cloud_properties?
+  value:
+    vswitch_id: ((vswitch_id))
+    security_group_ids: [((security_group_id))]
+    internet_charge_type: "PayByTraffic"
+
+- type: replace
+  path: /instance_groups/name=concourse/networks/name=default/static_ips?
+  value: [((internal_ip))]
+
+# Add CPI job
+- type: replace
+  path: /cloud_provider/template?
+  value:
+    name: alicloud_cpi
+    release: bosh-alicloud-cpi
+
+- type: replace
+  path: /cloud_provider/properties/alicloud?
+  value:
+    region: ((region))
+    availability_zone: ((zone))
+    access_key_id: ((access_key_id))
+    access_key_secret: ((access_key_secret))
+
+- type: replace
+  path: /cloud_provider/ssh_tunnel?
+  value:
+    host: ((internal_ip))
+    port: 22
+    user: vcap
+    private_key: ((private_key))
+
